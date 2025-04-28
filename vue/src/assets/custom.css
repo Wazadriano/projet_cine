@@ -1,0 +1,139 @@
+/* --- Films et affichage général --- */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.movie-card {
+  background-color: var(--color-background-soft);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.movie-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.movie-card h3 {
+  margin: 0.5rem;
+  padding: 0.5rem;
+  font-size: 1.1rem;
+  color: var(--color-heading);
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* --- Formulaires (connexion, inscription, profil) --- */
+.form-container {
+  max-width: 400px;
+  margin: auto;
+  padding: 2rem;
+  background-color: var(--color-background-soft);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.form-container h1 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* --- Inputs et boutons --- */
+input, select, textarea {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+}
+
+button {
+  background-color: var(--vt-c-indigo);
+  color: var(--vt-c-white);
+  border: none;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  background-color: #3c5b88;
+}
+
+/* --- Navbar et Footer --- */
+.navbar {
+  background-color: var(--color-background-soft);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.navbar a {
+  color: var(--color-heading);
+  margin-left: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  color: var(--vt-c-indigo);
+}
+
+.footer {
+  background-color: var(--color-background-soft);
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+/* --- Pagination --- */
+.pagination {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination button {
+  width: auto;
+}
+
+/* --- Film détail --- */
+.film-detail-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+}
+
+.film-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.film-info img {
+  width: 300px;
+  border-radius: 8px;
+}
+
+.film-text {
+  flex: 1;
+}

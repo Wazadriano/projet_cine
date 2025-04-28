@@ -1,0 +1,11 @@
+# Node.js
+/node/node_modules
+/node/.env
+
+# Vue.js
+/vue/node_modules
+/vue/.env
+
+# Mac / Windows systèmes
+.DS_Store
+Thumbs.db
