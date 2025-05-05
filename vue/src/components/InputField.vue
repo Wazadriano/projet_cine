@@ -1,53 +1,43 @@
 <template>
-  <div class="input-group">
+  <div class="input-field">
     <label :for="id">{{ label }}</label>
     <input
-  :id="id"
-  :type="type"
-  :placeholder="placeholder"
-  :value="modelValue"
-  @input="$emit('update:modelValue', $event.target.value)"
-  :required="required"
-  autocomplete="username"
-/>
-
+      :type="type"
+      :id="id"
+      :placeholder="placeholder"
+      :value="modelValue"
+      @input="$emit('update:modelValue', $event.target.value)"
+      :class="{ 'input-error': !!error }"
+    />
+    <p v-if="error" class="error-message">{{ error }}</p>
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    modelValue: {
-      type: String,
-      default: ''
-    },
-    label: String,
-    placeholder: String,
-    type: {
-      type: String,
-      default: 'text'
-    },
-    id: String,
-    required: {
-      type: Boolean,
-      default: false
-    }
-  },
-  emits: ['update:modelValue']
-};
+<script setup>
+defineProps({
+  label: String,
+  type: { type: String, default: 'text' },
+  id: String,
+  placeholder: String,
+  modelValue: String,
+  required: Boolean,
+  error: String
+});
 </script>
 
-
 <style scoped>
-.input-group {
+.input-field {
   margin-bottom: 1rem;
 }
-input {
-  width: 100%;
-  padding: 0.5rem;
+
+.input-error {
+  border: 1px solid red;
+  outline: none;
 }
-label {
-  display: block;
-  margin-bottom: 0.3rem;
+
+.error-message {
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
 }
 </style>

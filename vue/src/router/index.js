@@ -4,13 +4,15 @@ import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
 import ProfileView from '../views/ProfileView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
-import FilmDetailView from '@/views/FilmDetailView.vue'
+import FilmDetailView from '../views/FilmDetailView.vue';
+import MyListsView from '../views/MyListsView.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: HomeView },
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/register', name: 'Register', component: RegisterView },
   { path: '/film/:id', name: 'FilmDetail', component: FilmDetailView },
+  { path: '/my-lists', name: 'MyList', component: MyListsView },
   {
     path: '/profile',
     name: 'Profile',

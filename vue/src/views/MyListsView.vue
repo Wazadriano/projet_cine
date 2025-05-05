@@ -1,160 +1,192 @@
 <template>
   <div class="my-lists-container">
-    <h1>Mes Listes de Films 🎬</h1>
+    <h1>Mes listes de films 🎬</h1>
 
-    <div class="create-list-section">
-      <input
-        v-model="newListName"
-        type="text"
-        placeholder="Nom de la nouvelle liste"
-      />
-      <button @click="createList">Créer la liste</button>
+    <div v-if="lists.length === 0">
+      <p>Vous n’avez pas encore de liste 📭</p>
+      <input v-model="newListName" placeholder="Nom de votre première liste" />
+      <button @click="createList">Créer ma première liste ➕</button>
     </div>
 
-    <div v-if="lists.length > 0" class="select-list-section">
-      <label for="selectList">Choisissez votre liste :</label>
-      <select v-model="selectedListId" id="selectList">
-        <option disabled value="">-- Choisir une liste --</option>
-        <option v-for="list in lists" :key="list.id" :value="list.id">
-          {{ list.name }}
-        </option>
+    <div v-else>
+      <label for="list-select">Sélectionnez une liste :</label>
+      <select v-model="selectedListId" @change="fetchFilms" id="list-select">
+        <option v-for="list in lists" :key="list.id" :value="list.id">{{ list.name }}</option>
       </select>
-    </div>
 
-    <div v-if="selectedListId" class="search-section">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Rechercher un film..."
-        @keyup.enter="searchMovies"
-      />
-      <button @click="searchMovies">Rechercher</button>
-    </div>
-
-    <div v-if="movies.length > 0" class="movies-grid">
-      <div v-for="movie in movies" :key="movie.id" class="movie-card">
-        <img
-          v-if="movie.poster_path"
-          :src="'https://image.tmdb.org/t/p/w300' + movie.poster_path"
-          alt="Affiche film"
-        />
-        <h3>{{ movie.title }}</h3>
-        <button @click="addMovieToList(movie)">Ajouter à ma liste</button>
+      <div class="films-grid" v-if="films.length">
+        <div v-for="film in films" :key="film.id" class="film-item">
+          <img :src="'https://image.tmdb.org/t/p/w300' + film.poster_path" :alt="film.title" />
+          <h3>{{ film.title }}</h3>
+          <button @click="removeFromList(film.id)">❌ Retirer</button>
+        </div>
       </div>
-    </div>
 
-    <div v-else-if="searchDone && selectedListId">
-      <p>Aucun film trouvé...</p>
+      <div v-else>
+        <p>Cette liste est vide.</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useToken } from '@/stores/token'
+import { ref, onMounted } from 'vue';
+import { useToken } from '@/stores/token';
 
-const tokenstore = useToken()
+const tokenstore = useToken();
+const lists = ref([]);
+const selectedListId = ref(null);
+const films = ref([]);
+const newListName = ref('');
 
-const newListName = ref('')
-const lists = ref([])
-const selectedListId = ref('')
-const searchQuery = ref('')
-const movies = ref([])
-const searchDone = ref(false)
-
-const TMDB_TOKEN = import.meta.env.VITE_TMDB_TOKEN
+async function fetchFilms() {
+  if (!selectedListId.value) return;
+  const res = await fetch(`http://localhost:5000/api/lists/${selectedListId.value}`, {
+    headers: {
+      Authorization: `Bearer ${tokenstore.token}`
+    }
+  });
+  const data = await res.json();
+  films.value = data;
+}
 
 async function createList() {
   if (!newListName.value.trim()) {
-    alert('Veuillez entrer un nom de liste.')
-    return
+    alert("Merci de donner un nom à votre liste.");
+    return;
   }
 
-  try {
-    const response = await fetch('http://localhost:5000/api/lists/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenstore.token}`
-      },
-      body: JSON.stringify({ name: newListName.value })
-    })
+  const res = await fetch('http://localhost:5000/api/lists/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${tokenstore.token}`
+    },
+    body: JSON.stringify({ name: newListName.value })
+  });
 
-    const data = await response.json()
+  const data = await res.json();
+  if (res.ok) {
+    lists.value.push(data);
+    selectedListId.value = data.id;
+    newListName.value = '';
+    fetchFilms();
+  } else {
+    alert(data.message || "Erreur lors de la création.");
+  }
+}
 
-    if (response.ok) {
-      alert('Liste créée 🎉')
-      newListName.value = ''
-      await fetchLists()
-    } else {
-      alert(data.message || 'Erreur lors de la création.')
+async function removeFromList(filmId) {
+  if (!confirm("Supprimer ce film de la liste ?")) return;
+
+  const res = await fetch(`http://localhost:5000/api/lists/${selectedListId.value}/${filmId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${tokenstore.token}`
     }
-  } catch (error) {
-    console.error('Erreur création liste:', error)
+  });
+
+  const data = await res.json();
+  if (res.ok) {
+    films.value = films.value.filter(f => f.id !== filmId);
+  } else {
+    alert(data.message || "Erreur lors de la suppression.");
   }
 }
 
 async function fetchLists() {
-  try {
-    const response = await fetch('http://localhost:5000/api/my-lists', {
-      headers: {
-        Authorization: `Bearer ${tokenstore.token}`
-      }
-    })
-    const data = await response.json()
-    lists.value = data.lists || []
-  } catch (error) {
-    console.error('Erreur chargement listes:', error)
-  }
-}
-
-async function searchMovies() {
-  if (!searchQuery.value.trim()) return
-
-  try {
-    const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(searchQuery.value)}&language=fr-FR`, {
-      headers: {
-        Authorization: `Bearer ${TMDB_TOKEN}`,
-        'Content-Type': 'application/json;charset=utf-8'
-      }
-    })
-
-    const data = await response.json()
-    movies.value = data.results || []
-    searchDone.value = true
-  } catch (err) {
-    console.error('Erreur TMDb:', err)
-  }
-}
-
-async function addMovieToList(movie) {
-  try {
-    const response = await fetch(`http://localhost:5000/api/lists/${selectedListId.value}/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenstore.token}`
-      },
-      body: JSON.stringify({
-        film_id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path
-      })
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-      alert('Film ajouté à la liste 🎬✅')
-    } else {
-      alert(data.message || 'Erreur lors de l\'ajout du film.')
+  const res = await fetch('http://localhost:5000/api/lists/user', {
+    headers: {
+      Authorization: `Bearer ${tokenstore.token}`
     }
-  } catch (error) {
-    console.error('Erreur ajout film:', error)
+  });
+  const data = await res.json();
+  lists.value = data;
+
+  if (data.length > 0) {
+    selectedListId.value = data[0].id;
+    await fetchFilms(); // pas d'appel si liste vide
   }
 }
 
-onMounted(() => {
-  fetchLists()
-})
+onMounted(fetchLists);
+
+
 </script>
+
+<style scoped>
+.my-lists-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+}
+
+.films-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.film-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f8f8f8;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.film-item img {
+  width: 80px;
+  height: auto;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.film-item h3 {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.film-item button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.film-item button:hover {
+  background-color: #cc0000;
+}
+
+
+input {
+  padding: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+</style>
+
+

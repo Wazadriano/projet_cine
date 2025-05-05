@@ -67,20 +67,27 @@ router.post("/login", (req, res) => {
 });
 
 router.post("/change-password", authenticateToken, async (req, res) => {
-  const { password } = req.body;
-  db.query(
-    "UPDATE users SET password = ? WHERE id = ?",
-    [await bcrypt.hash(password, 10), req.user.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ message: "Erreur serveur." });
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Utilisateur non trouvé." });
-      res
-        .status(200)
-        .json({ ok: true, message: "Mot de passe changé avec succès." });
+  const { oldPassword, newPassword } = req.body
+
+  db.query("SELECT * FROM users WHERE id = ?", [req.user.id], async (err, result) => {
+    if (err) return res.status(500).json({ message: "Erreur serveur." })
+    if (result.length === 0) return res.status(404).json({ message: "Utilisateur non trouvé." })
+
+    const user = result[0]
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password)
+    if (!isMatch) {
+      return res.status(401).json({ message: "Ancien mot de passe incorrect." })
     }
-  );
-});
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    db.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, req.user.id], (err) => {
+      if (err) return res.status(500).json({ message: "Erreur lors de la mise à jour." })
+      res.status(200).json({ ok: true, message: "Mot de passe mis à jour avec succès." })
+    })
+  })
+})
 
 
 module.exports = router;

@@ -1,14 +1,14 @@
 <template>
   <div class="form-container">
     <h1>Connexion</h1>
-    <form @submit.prevent="handleLogin">
+    <form @submit.prevent="handleLogin" autocomplete="off">
       <InputField
         label="Email"
         v-model="email"
         type="email"
         id="email"
         placeholder="exemple@mail.com"
-        required
+
       />
 
       <InputField
@@ -17,7 +17,7 @@
         type="password"
         id="password"
         placeholder="Votre mot de passe"
-        required
+
       />
 
       <FormButton>Se connecter</FormButton>
@@ -60,7 +60,6 @@ async function handleLogin() {
       tokenstore.setToken(data.token)
       tokenstore.setUsername(decoded.username)
 
-      alert('Connexion réussie 🎉')
       router.push('/profile')
     } else {
       alert(data.message || 'Erreur lors de la connexion')
