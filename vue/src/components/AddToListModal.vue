@@ -17,7 +17,7 @@
       <input v-model="newListName" id="newList" placeholder="Nom de la nouvelle liste" />
 
       <div class="modal-actions">
-        <button @click="addToList">Ajouter</button>
+        <button @click="addToList">Ajouter ❤️</button>
         <button @click="close">Annuler</button>
       </div>
     </div>
@@ -48,55 +48,75 @@ function close() {
 }
 
 async function fetchUserLists() {
-  const res = await fetch('http://localhost:5000/api/lists/user', {
-    headers: {
-      Authorization: `Bearer ${tokenstore.token}`
-    }
-  });
-  const data = await res.json();
-  userLists.value = data;
-  if (data.length > 0) selectedListId.value = data[0].id;
+  try {
+    const res = await fetch('http://localhost:5000/api/lists/user', {
+      headers: {
+        Authorization: `Bearer ${tokenstore.token}`
+      }
+    });
+    const data = await res.json();
+    userLists.value = data;
+    selectedListId.value = data[0]?.id || null;
+  } catch (err) {
+    console.error('Erreur récupération listes :', err);
+  }
 }
 
 async function addToList() {
   let listId = selectedListId.value;
 
-  // Création nouvelle liste
-  if (newListName.value.trim()) {
-    const res = await fetch('http://localhost:5000/api/lists/create', {
+  try {
+    // Si un nom est donné, on crée une nouvelle liste
+    if (newListName.value.trim()) {
+      const res = await fetch('http://localhost:5000/api/lists/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${tokenstore.token}`
+        },
+        body: JSON.stringify({ name: newListName.value })
+      });
+
+      const created = await res.json();
+      if (!res.ok) return alert(created.message || "Erreur lors de la création.");
+
+      listId = created.id;
+      userLists.value.push(created);
+      selectedListId.value = created.id;
+      newListName.value = '';
+    }
+
+    if (!listId) {
+      alert("Veuillez sélectionner ou créer une liste.");
+      return;
+    }
+
+    const res = await fetch(`http://localhost:5000/api/lists/add`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${tokenstore.token}`
       },
-      body: JSON.stringify({ name: newListName.value })
+      body: JSON.stringify({
+        listId,
+        film_id: props.film.id,
+        title: props.film.title,
+        poster_path: props.film.poster_path
+      })
     });
-    const created = await res.json();
-    if (!res.ok) return alert(created.message);
-    listId = created.id;
-  }
 
-  const res = await fetch(`http://localhost:5000/api/lists/add`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${tokenstore.token}`
-    },
-    body: JSON.stringify({
-  listId,
-  film_id: props.film.id,
-  title: props.film.title,
-  poster_path: props.film.poster_path
-})
-  });
+    const data = await res.json();
 
-  const data = await res.json();
-  if (res.ok) {
-    alert('Film ajouté à la liste ✅');
-    newListName.value = '';
-    close();
-  } else {
-    alert(data.message || 'Erreur');
+    if (res.ok) {
+      alert('Film ajouté à la liste ✅');
+      close();
+    } else {
+      alert(data.message || 'Erreur lors de l’ajout.');
+    }
+
+  } catch (error) {
+    console.error('Erreur réseau :', error);
+    alert("Erreur de connexion au serveur.");
   }
 }
 </script>
@@ -114,38 +134,46 @@ async function addToList() {
   justify-content: center;
   z-index: 1000;
 }
+
 .modal-box {
-  background: rgb(0, 0, 0);
+  background: #fff;
+  color: #333;
   padding: 2rem;
   border-radius: 8px;
   max-width: 400px;
   width: 100%;
 }
+
 .modal-box label {
   display: block;
   margin-top: 1rem;
 }
+
 .modal-box input,
 .modal-box select {
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.5rem;
 }
+
 .modal-actions {
   margin-top: 1.5rem;
   display: flex;
   justify-content: space-between;
 }
+
 .modal-actions button {
   padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
+
 .modal-actions button:first-child {
   background-color: #007bff;
   color: white;
 }
+
 .modal-actions button:last-child {
   background-color: #ccc;
 }

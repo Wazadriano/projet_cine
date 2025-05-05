@@ -9,10 +9,18 @@
     </div>
 
     <div v-else>
-      <label for="list-select">Sélectionnez une liste :</label>
-      <select v-model="selectedListId" @change="fetchFilms" id="list-select">
-        <option v-for="list in lists" :key="list.id" :value="list.id">{{ list.name }}</option>
-      </select>
+      <div class="list-selector">
+        <label for="list-select">Liste :</label>
+        <select v-model="selectedListId" @change="fetchFilms" id="list-select">
+          <option v-for="list in lists" :key="list.id" :value="list.id">{{ list.name }}</option>
+        </select>
+        <button @click="deleteList" class="danger">🗑️ Supprimer cette liste</button>
+      </div>
+
+      <div class="create-list-section">
+        <input v-model="newListName" placeholder="Nouvelle liste" />
+        <button @click="createList">Créer ➕</button>
+      </div>
 
       <div class="films-grid" v-if="films.length">
         <div v-for="film in films" :key="film.id" class="film-item">
@@ -38,6 +46,24 @@ const lists = ref([]);
 const selectedListId = ref(null);
 const films = ref([]);
 const newListName = ref('');
+
+async function fetchLists() {
+  const res = await fetch('http://localhost:5000/api/lists/user', {
+    headers: {
+      Authorization: `Bearer ${tokenstore.token}`
+    }
+  });
+  const data = await res.json();
+  lists.value = data;
+
+  if (data.length > 0) {
+    selectedListId.value = data[0].id;
+    await fetchFilms();
+  } else {
+    films.value = [];
+    selectedListId.value = null;
+  }
+}
 
 async function fetchFilms() {
   if (!selectedListId.value) return;
@@ -76,6 +102,27 @@ async function createList() {
   }
 }
 
+async function deleteList() {
+  if (!selectedListId.value || !confirm("Supprimer cette liste et tous ses films ?")) return;
+
+  const res = await fetch(`http://localhost:5000/api/lists/${selectedListId.value}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${tokenstore.token}`
+    }
+  });
+
+  if (res.ok) {
+    const index = lists.value.findIndex(l => l.id === selectedListId.value);
+    lists.value.splice(index, 1);
+    selectedListId.value = lists.value[0]?.id || null;
+    fetchFilms();
+  } else {
+    const data = await res.json();
+    alert(data.message || "Erreur lors de la suppression.");
+  }
+}
+
 async function removeFromList(filmId) {
   if (!confirm("Supprimer ce film de la liste ?")) return;
 
@@ -94,31 +141,27 @@ async function removeFromList(filmId) {
   }
 }
 
-async function fetchLists() {
-  const res = await fetch('http://localhost:5000/api/lists/user', {
-    headers: {
-      Authorization: `Bearer ${tokenstore.token}`
-    }
-  });
-  const data = await res.json();
-  lists.value = data;
-
-  if (data.length > 0) {
-    selectedListId.value = data[0].id;
-    await fetchFilms(); // pas d'appel si liste vide
-  }
-}
-
 onMounted(fetchLists);
-
-
 </script>
 
 <style scoped>
 .my-lists-container {
-  max-width: 1000px;
+  max-width: 900px;
   margin: auto;
   padding: 2rem;
+}
+
+.list-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.create-list-section {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .films-grid {
@@ -138,7 +181,7 @@ onMounted(fetchLists);
   background: #f8f8f8;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .film-item img {
@@ -167,26 +210,29 @@ onMounted(fetchLists);
   background-color: #cc0000;
 }
 
-
 input {
   padding: 0.5rem;
-  width: 100%;
-  margin-top: 1rem;
+  flex: 1;
 }
 
 button {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  background-color: #007bff;
-  color: white;
+  padding: 0.6rem 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  background-color: #007bff;
+  color: white;
 }
 
 button:hover {
   background-color: #0056b3;
 }
+
+button.danger {
+  background-color: #dc3545;
+}
+
+button.danger:hover {
+  background-color: #a71d2a;
+}
 </style>
-
-
