@@ -2,7 +2,7 @@
   <RouterLink :to="`/film/${film.id}`" class="film-card">
     <img :src="'https://image.tmdb.org/t/p/w300' + film.poster_path" :alt="film.title" />
     <h3>{{ film.title }}</h3>
-    <p>{{ film.vote_average.toFixed(1) }} ⭐</p>
+    <p v-if="film.vote_average">{{ film.vote_average.toFixed(1) }} ⭐</p>
   </RouterLink>
 </template>
 

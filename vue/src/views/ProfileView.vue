@@ -33,6 +33,8 @@
       <div class="navigation-section">
         <h2>Mes Films</h2>
         <RouterLink class="list-link" to="/my-lists">Accéder à mes listes de films 🎬</RouterLink>
+        <br>
+        <RouterLink class="list-link" to="/favoris">Accéder à mes films favoris 💖</RouterLink>
       </div>
     </div>
 

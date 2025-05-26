@@ -19,6 +19,20 @@ const routes = [
     component: ProfileView,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/favoris',
+    name: 'Favoris',
+    component: () => import('../views/FavorisView.vue'),
+    meta: { requiresAuth: true }
+  },
+
+  {
+    path: '/listes-partagees',
+    name: 'SharedLists',
+    component: () => import('@/views/SharedListsView.vue'),
+    meta: { requiresAuth: true }
+  },
+
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView }
 ];
 

@@ -34,13 +34,13 @@ const props = defineProps({
 });
 const emit = defineEmits(['close']);
 
-const tokenstore = useToken();
+const tokenStore = useToken();
 const userLists = ref([]);
 const selectedListId = ref(null);
 const newListName = ref('');
 
 watch(() => props.show, (val) => {
-  if (val && tokenstore.token) fetchUserLists();
+  if (val && tokenStore.token) fetchUserLists();
 });
 
 function close() {
@@ -49,16 +49,14 @@ function close() {
 
 async function fetchUserLists() {
   try {
-    const res = await fetch('http://localhost:5000/api/lists/user', {
-      headers: {
-        Authorization: `Bearer ${tokenstore.token}`
-      }
+    const res = await fetch('/api/lists/user', {
+      headers: { Authorization: `Bearer ${tokenStore.token}` }
     });
     const data = await res.json();
     userLists.value = data;
     selectedListId.value = data[0]?.id || null;
-  } catch (err) {
-    console.error('Erreur récupération listes :', err);
+  } catch (error) {
+    console.error("Erreur chargement listes :", error);
   }
 }
 
@@ -66,36 +64,31 @@ async function addToList() {
   let listId = selectedListId.value;
 
   try {
-    // Si un nom est donné, on crée une nouvelle liste
+    // Créer une nouvelle liste si champ rempli
     if (newListName.value.trim()) {
-      const res = await fetch('http://localhost:5000/api/lists/create', {
+      const res = await fetch('/api/lists/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenstore.token}`
+          Authorization: `Bearer ${tokenStore.token}`
         },
         body: JSON.stringify({ name: newListName.value })
       });
-
       const created = await res.json();
-      if (!res.ok) return alert(created.message || "Erreur lors de la création.");
-
-      listId = created.id;
+      if (!res.ok) return alert(created.message || "Erreur création.");
       userLists.value.push(created);
-      selectedListId.value = created.id;
+      listId = created.id;
+      selectedListId.value = listId;
       newListName.value = '';
     }
 
-    if (!listId) {
-      alert("Veuillez sélectionner ou créer une liste.");
-      return;
-    }
+    if (!listId) return alert("Aucune liste sélectionnée.");
 
-    const res = await fetch(`http://localhost:5000/api/lists/add`, {
+    const res = await fetch('/api/lists/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${tokenstore.token}`
+        Authorization: `Bearer ${tokenStore.token}`
       },
       body: JSON.stringify({
         listId,
@@ -106,20 +99,16 @@ async function addToList() {
     });
 
     const data = await res.json();
-
-    if (res.ok) {
-      alert('Film ajouté à la liste ✅');
-      close();
-    } else {
-      alert(data.message || 'Erreur lors de l’ajout.');
-    }
-
+    if (!res.ok) return alert(data.message || "Erreur ajout.");
+    alert("✅ Film ajouté à la liste !");
+    close();
   } catch (error) {
-    console.error('Erreur réseau :', error);
-    alert("Erreur de connexion au serveur.");
+    console.error("Erreur ajout film :", error);
+    alert("Erreur de connexion.");
   }
 }
 </script>
+
 
 <style scoped>
 .modal-backdrop {

@@ -1,3 +1,4 @@
+
 <template>
   <nav class="navbar">
     <div>
@@ -5,7 +6,9 @@
       <RouterLink v-if="!tokenstore.token" to="/login">Connexion</RouterLink>
       <RouterLink v-if="!tokenstore.token" to="/register">Inscription</RouterLink>
       <RouterLink v-if="tokenstore.token" to="/profile">Mon Profil</RouterLink>
-      <RouterLink v-if="tokenstore.token" to="/my-lists">Mes Films</RouterLink>
+      <RouterLink v-if="tokenstore.token" to="/my-lists">Mes Listes</RouterLink>
+      <RouterLink v-if="tokenstore.token" to="/favoris">Favoris</RouterLink>
+
     </div>
 
     <div v-if="tokenstore.token">
